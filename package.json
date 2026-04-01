@@ -1,0 +1,39 @@
+{
+  "name": "@jonaswitt/truma-ble",
+  "version": "1.0.0",
+  "description": "TypeScript BLE client for Truma cooler monitoring and control",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "truma-ble": "dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc && chmod +x dist/cli.js",
+    "watch": "tsc --watch",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "truma",
+    "ble",
+    "bluetooth",
+    "cooler",
+    "refrigerator",
+    "monitoring",
+    "iot"
+  ],
+  "author": "Jonas Witt",
+  "license": "MIT",
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "dependencies": {
+    "@abandonware/noble": "^1.9.2-15"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.19",
+    "typescript": "^5.3.3"
+  }
+}
