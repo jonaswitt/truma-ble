@@ -104,7 +104,7 @@ async function main() {
 
         const address = args[1];
         const file = args[2];
-        const CSV_HEADER = 'Time,actual,set,voltage,batteryProtection\n';
+        const CSV_HEADER = 'Time,actual,set,voltage,batteryProtection,errorCode\n';
 
         const needsHeader = !fs.existsSync(file) || fs.statSync(file).size === 0;
         if (needsHeader) {
@@ -115,7 +115,7 @@ async function main() {
           try {
             const client = new TrumaClient();
             const status = await client.readStatus({ address, timeout });
-            const line = `${new Date().toISOString()},${status.actualTemp},${status.setTemp},${status.voltage},${status.batteryProtection}\n`;
+            const line = `${new Date().toISOString()},${status.actualTemp},${status.setTemp},${status.voltage},${status.batteryProtection},${status.errorCode ?? ""}\n`;
             fs.appendFileSync(file, line);
             console.log(line.trimEnd());
           } catch (err) {

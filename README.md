@@ -200,11 +200,12 @@ Static method to scan for nearby Truma devices.
 
 ```typescript
 interface TrumaStatus {
-  voltage: number;                           // Battery voltage in volts (e.g., 13.12)
-  actualTemp: number;                        // Current temperature in °C (e.g., -13)
-  setTemp: number;                           // Target temperature in °C (e.g., -18)
+  voltage: number;                              // Battery voltage in volts (e.g., 13.12)
+  actualTemp: number;                           // Current temperature in °C (e.g., -13)
+  setTemp: number;                              // Target temperature in °C (e.g., -18)
   batteryProtection: 'low' | 'medium' | 'high'; // Battery protection level
-  raw: string;                               // Raw packet as hex string
+  errorCode: null | 'E1' | 'E2' | 'E3' | 'E4' | 'E5'; // Active error (null = no error; E0 encoding unknown)
+  raw: string;                                  // Raw packet as hex string
 }
 ```
 
@@ -229,7 +230,7 @@ Byte   0  1  2  3   4   5   6   7      8  9  10 11   12 13 14  15
 | Bytes | Field | Description |
 |-------|-------|-------------|
 | 0-3 | Header | `AA C1 F2 A0` (fixed) |
-| 4 | **Flags** | Bits\[3:2\] = battery protection level (see below); bit\[0\] = 1 (fixed) |
+| 4 | **Flags** | Bits\[7:4\] = error code (see below); bits\[3:2\] = battery protection (see below); bit\[0\] = 1 (fixed) |
 | 5 | Unknown | |
 | 6 | **Actual temp** | Current temperature (signed int8, °C) |
 | 7 | **Set temp** | Target temperature (signed int8, °C) |
@@ -237,6 +238,18 @@ Byte   0  1  2  3   4   5   6   7      8  9  10 11   12 13 14  15
 | 10-11 | **Voltage** | Battery voltage (uint16 BE ÷ 100 = volts) |
 | 12-14 | Fixed | `00 00 00` |
 | 15 | Checksum | Varies with packet content |
+
+**Error code** (`(byte4 >> 4) & 0xF`):
+
+| Value | Error | Notes |
+|-------|-------|-------|
+| 0 | null | No active error |
+| 1 | E1 | |
+| 2 | E2 | |
+| 3 | E3 | |
+| 4 | E4 | |
+| 5 | E5 | |
+| — | E0 | Byte value unknown/unsupported |
 
 **Battery protection level** (`(byte4 >> 2) & 0x3`):
 

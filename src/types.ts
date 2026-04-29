@@ -1,5 +1,8 @@
 export type BatteryProtection = 'low' | 'medium' | 'high';
 
+/** E1–E5 as observed; E0 encoding is unknown. null means no active error. */
+export type ErrorCode = null | 'E1' | 'E2' | 'E3' | 'E4' | 'E5';
+
 /**
  * Truma cooler status data
  */
@@ -12,6 +15,8 @@ export interface TrumaStatus {
   setTemp: number;
   /** Battery protection level */
   batteryProtection: BatteryProtection;
+  /** Active error code, or 'none'. E0 encoding is unknown/unsupported. */
+  errorCode: ErrorCode;
   /** Raw packet data as hex string */
   raw: string;
 }

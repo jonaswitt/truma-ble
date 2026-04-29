@@ -1,4 +1,4 @@
-import { TrumaStatus, BatteryProtection } from './types';
+import { TrumaStatus, BatteryProtection, ErrorCode } from './types';
 
 /**
  * BLE characteristic UUIDs (short form for noble compatibility)
@@ -45,13 +45,15 @@ export function buildSetTempPacket(tempC: number): Buffer {
 }
 
 const BATTERY_PROTECTION_LEVELS: BatteryProtection[] = ['low', 'medium', 'high'];
+// 0 = no error; 1–5 = E1–E5. E0 byte value is unknown/unsupported.
+const ERROR_CODES: ErrorCode[] = [null, 'E1', 'E2', 'E3', 'E4', 'E5'];
 
 /**
  * Parse a status notification packet
  *
  * Packet layout (16 bytes):
  * [0-3]   Header: AA C1 F2 A0
- * [4]     Flags: bits[3:2] = battery protection (0=low,1=medium,2=high), bit[0]=1 (fixed)
+ * [4]     Flags: bits[7:4] = error code (0=none,1=E1…5=E5); bits[3:2] = battery protection (0=low,1=medium,2=high); bit[0]=1 (fixed)
  * [5]     Unknown
  * [6]     Actual temp (signed int8, °C)
  * [7]     Set temp (signed int8, °C)
@@ -76,6 +78,7 @@ export function parseNotification(data: Buffer): TrumaStatus | null {
   const actualTemp = byteToTemp(data[6]);
   const setTemp = byteToTemp(data[7]);
   const batteryProtection = BATTERY_PROTECTION_LEVELS[(data[4] >> 2) & 0x3] ?? 'low';
+  const errorCode = ERROR_CODES[(data[4] >> 4) & 0xF] ?? null;
   const raw = data.toString('hex').toUpperCase().match(/.{1,2}/g)?.join(' ') || '';
 
   return {
@@ -83,6 +86,7 @@ export function parseNotification(data: Buffer): TrumaStatus | null {
     actualTemp,
     setTemp,
     batteryProtection,
+    errorCode,
     raw
   };
 }
