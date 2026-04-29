@@ -169,33 +169,37 @@ export class TrumaClient {
 
   private async connect(address: string, timeout: number): Promise<void> {
     return new Promise((resolve, reject) => {
-      const timer = setTimeout(() => {
-        noble.stopScanning();
-        reject(new Error(`Connection timeout after ${timeout}ms`));
-      }, timeout);
-
       const normalizedTarget = TrumaClient.normalizeAddress(address);
 
-      noble.on('discover', async (peripheral) => {
+      const onDiscover = async (peripheral: noble.Peripheral) => {
         const normalizedId = TrumaClient.normalizeAddress(peripheral.id);
 
         if (normalizedId === normalizedTarget) {
+          noble.removeListener('discover', onDiscover);
           noble.stopScanning();
+          clearTimeout(timer);
           this.peripheral = peripheral;
-
-          peripheral.once('connect', () => {
-            clearTimeout(timer);
-            resolve();
-          });
 
           peripheral.once('disconnect', () => {
             this.peripheral = null;
           });
 
-          await peripheral.connectAsync();
+          try {
+            await peripheral.connectAsync();
+            resolve();
+          } catch (err) {
+            reject(err);
+          }
         }
-      });
+      };
 
+      const timer = setTimeout(() => {
+        noble.removeListener('discover', onDiscover);
+        noble.stopScanning();
+        reject(new Error(`Connection timeout after ${timeout}ms`));
+      }, timeout);
+
+      noble.on('discover', onDiscover);
       noble.startScanning([], true);
     });
   }
