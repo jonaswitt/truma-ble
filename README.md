@@ -200,10 +200,11 @@ Static method to scan for nearby Truma devices.
 
 ```typescript
 interface TrumaStatus {
-  voltage: number;      // Battery voltage in volts (e.g., 13.12)
-  actualTemp: number;   // Current temperature in °C (e.g., -13)
-  setTemp: number;      // Target temperature in °C (e.g., -18)
-  raw: string;          // Raw packet as hex string
+  voltage: number;                           // Battery voltage in volts (e.g., 13.12)
+  actualTemp: number;                        // Current temperature in °C (e.g., -13)
+  setTemp: number;                           // Target temperature in °C (e.g., -18)
+  batteryProtection: 'low' | 'medium' | 'high'; // Battery protection level
+  raw: string;                               // Raw packet as hex string
 }
 ```
 
@@ -221,20 +222,29 @@ The Truma cooler uses a reverse-engineered BLE protocol with 16-byte packets.
 16-byte packet format:
 
 ```
-Byte   0  1  2  3   4  5   6   7      8  9  10 11   12 13 14  15
-      [AA C1 F2 A0] [??][??][A] [S]   [00 00][V  V ] [00 00 00][C]
+Byte   0  1  2  3   4   5   6   7      8  9  10 11   12 13 14  15
+      [AA C1 F2 A0] [F] [??][A] [S]   [00 00][V  V ] [00 00 00][C]
 ```
 
 | Bytes | Field | Description |
 |-------|-------|-------------|
 | 0-3 | Header | `AA C1 F2 A0` (fixed) |
-| 4-5 | Unknown | Constant in notifications (e.g., `09 01`) |
+| 4 | **Flags** | Bits\[3:2\] = battery protection level (see below); bit\[0\] = 1 (fixed) |
+| 5 | Unknown | |
 | 6 | **Actual temp** | Current temperature (signed int8, °C) |
 | 7 | **Set temp** | Target temperature (signed int8, °C) |
 | 8-9 | Fixed | `00 00` |
 | 10-11 | **Voltage** | Battery voltage (uint16 BE ÷ 100 = volts) |
 | 12-14 | Fixed | `00 00 00` |
 | 15 | Checksum | Varies with packet content |
+
+**Battery protection level** (`(byte4 >> 2) & 0x3`):
+
+| Value | byte 4 | Level |
+|-------|--------|-------|
+| 0 | `0x01` | low |
+| 1 | `0x05` | medium |
+| 2 | `0x09` | high |
 
 **Encoding Examples:**
 - Voltage: `0x04FD` = 1277 → 12.77V

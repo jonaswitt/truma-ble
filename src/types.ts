@@ -1,3 +1,5 @@
+export type BatteryProtection = 'low' | 'medium' | 'high';
+
 /**
  * Truma cooler status data
  */
@@ -8,6 +10,8 @@ export interface TrumaStatus {
   actualTemp: number;
   /** Target temperature in Celsius (e.g., -18) */
   setTemp: number;
+  /** Battery protection level */
+  batteryProtection: BatteryProtection;
   /** Raw packet data as hex string */
   raw: string;
 }
